@@ -1,39 +1,111 @@
-# Slint Rust Template
+# Metal Gear Launcher
 
-A template for a Rust application that's using [Slint](https://slint.rs/) for the user interface.
+A fullscreen, transparent desktop overlay for Windows that launches your programs from a Metal Gear Solid–style carousel. Spin through your apps with the arrow keys, WASD or mouse wheel, and hit Enter to launch. Due to the window being transparent you may get confused and wonder why you can't click on something sometimes so watch for that; If that happens just hit E to quit it or M to minimize it.
 
-## About
+Built with Rust + [Slint](https://slint.dev). Windows only.
 
-This template helps you get started developing a Rust application with Slint as toolkit
-for the user interface. It demonstrates the integration between the `.slint` UI markup and
-Rust code, how to react to callbacks, get and set properties, and use basic widgets.
+## Running it
 
-## Usage
+The app reads two things from **its own folder** (the directory the `.exe` lives in): a `config.json` file and an `icons/` folder. A working install looks like this:
 
-1. Install Rust by following its [getting-started guide](https://www.rust-lang.org/learn/get-started).
-   Once this is done, you should have the `rustc` compiler and the `cargo` build system installed in your `PATH`.
-2. Download and extract the [ZIP archive of this repository](https://github.com/slint-ui/slint-rust-template/archive/refs/heads/main.zip).
-3. Rename the extracted directory and change into it:
-    ```
-    mv slint-rust-template-main my-project
-    cd my-project    
-    ```
-4. Build with `cargo`:
-    ```
-    cargo build
-    ```
-5. Run the application binary:
-    ```
-    cargo run
-    ```
+```
+metal-gear-rust/
+├── metal-gear-rust.exe
+├── config.json
+└── icons/
+    ├── blender.png
+    └── outlook.png
+```
 
-We recommend using an IDE for development, along with our [LSP-based IDE integration for `.slint` files](https://github.com/slint-ui/slint/blob/master/tools/lsp/README.md). You can also load this project directly in [Visual Studio Code](https://code.visualstudio.com) and install our [Slint extension](https://marketplace.visualstudio.com/items?itemName=Slint.slint).
+When running from source with `cargo run`, those two live next to `Cargo.toml` instead.
 
-## Next Steps
+If `config.json` is missing or contains a syntax error, the launcher will come up empty — see [Troubleshooting](#troubleshooting).
 
-We hope that this template helps you get started, and that you enjoy exploring making user interfaces with Slint. To learn more
-about the Slint APIs and the `.slint` markup language, check out our [online documentation](https://slint.dev/docs).
+## Controls
 
-Don't forget to edit this readme to replace it by yours, and edit the `name =` field in `Cargo.toml` to match the name of your
-project.
-"# metal-gear-rust" 
+| Key | Action |
+| --- | --- |
+| Arrow keys / WASD | Move through the cards |
+| Mouse wheel | Scroll through the cards |
+| Q | Open / close the carousel |
+| Enter | Launch the selected program |
+| Esc | Reset the selection |
+| M | Minimise |
+| E | Quit |
+
+## Adding a program
+
+Programs live in `config.json`, which is a list of entries. Each entry has three fields:
+
+```json
+[
+  {
+    "label": "blender",
+    "program_path": "C:/Program Files/Blender Foundation/Blender/blender.exe",
+    "runnable": true
+  }
+]
+```
+
+- **`label`** — the name shown on the card (displayed in uppercase automatically). It also decides which icon the card uses (see [Adding and naming icons](#adding-and-naming-icons)).
+- **`program_path`** — what to launch: either the full path to an `.exe`, or a Store app's App ID (see the next section). Use `null` for a card that doesn't launch anything.
+- **`runnable`** — `true` if pressing Enter should launch it, `false` for a decorative / non-launching card.
+
+To add a program, copy an existing entry, change the fields, and save. Add as many as you like.
+
+**Path format:** in JSON, use forward slashes (`C:/Program Files/App/app.exe`) or doubled backslashes (`C:\\Program Files\\App\\app.exe`). Do **not** use double forward slashes (`//`) — that breaks the path.
+
+## Finding the program path or App ID
+
+There are two kinds of program, and they need different things in `program_path`. The launcher works out which is which automatically: if the value contains a `:` or a slash it's treated as a file path; otherwise it's treated as an App ID. So you just need to put the correct string in — no flag required.
+
+### Normal desktop apps (Blender, VS Code, Steam, …)
+
+These have a real `.exe`. The quickest way to find it: search the app in the Start menu, right-click it → **Open file location**, then right-click the shortcut → **Properties**, and copy the **Target** path.
+
+Put the resulting path into `program_path` (minding the slash rule above).
+
+### Store / UWP apps (new Outlook, Ubuntu/WSL, Calculator, …)
+
+These don't have a stable `.exe` path — they live in protected, versioned folders that change on every update. Instead they're launched by an **App ID** (AUMID). List them with PowerShell:
+
+```powershell
+Get-StartApps
+```
+
+To filter for a specific one:
+
+```powershell
+Get-StartApps | Where-Object Name -like "*Outlook*"
+```
+
+Copy the value from the **AppID** column verbatim into `program_path`. It will look like one of these:
+
+```
+Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows
+Microsoft.AutoGenerated.{B30B647F-FA4E-3925-6F05-898FCE653890}
+```
+
+Both forms work. Note that auto-generated IDs (the `{GUID}` kind) are tied to your machine, so they'll be different on someone else's PC.
+
+## Adding and naming icons
+
+Each card's image comes from a PNG in the `icons/` folder. **The PNG's filename must match the entry's `label` exactly.**
+
+So if your entry is:
+
+```json
+{ "label": "blender", "program_path": "...", "runnable": true }
+```
+
+then the icon must be `icons/blender.png`. Label `outlook` → `icons/outlook.png`, and so on.
+
+- Match the case of your labels. The card uppercases the text for display, but the file is matched against the raw `label`, so keep the filename the same as what you typed in `config.json`.
+- PNGs with transparent backgrounds look best, and roughly square images fit the card nicely.
+- If no PNG matches a label, that card simply shows no image — it won't error.
+
+## Troubleshooting
+
+- **The launcher comes up empty.** `config.json` failed to parse. JSON is all-or-nothing, so a single mistake kills the whole file — check for trailing commas, missing quotes, or a stray colon inside a key name (`"runnable":` written as the key is a classic). Use straight quotes (`"`), not curly ones.
+- **A program won't launch.** Re-check the `program_path`. For a normal app, confirm the `.exe` actually exists at that path; for a Store app, re-run `Get-StartApps` and copy the AppID exactly.
+- **An icon doesn't show.** The PNG filename doesn't match the `label` exactly, or it isn't in the `icons/` folder sitting next to the `.exe`.
