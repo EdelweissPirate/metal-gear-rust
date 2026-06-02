@@ -1,0 +1,69 @@
+import { AppState } from "../state.slint";
+
+export component Card inherits Rectangle {
+    in property <string> label;
+    in property <int> index;
+    in property <string> pos; // horizontal or vertical: h, v
+    in property <length> p_height;
+    in property <bool> hidden;
+
+    in property <image> icon;
+
+    width: 275px;
+    height: root.width * 9 / 16;        // 16:9
+
+    opacity: hidden ? 0 : 1;
+
+    background: #00008030;              // navy base, shows through the window
+
+    x: pos == "h" ? ((root.width + 40px) * (AppState.active ? 1 : 0)) * (index): 0px;
+    y: pos == "v" ? p_height - root.height - (((root.height + 40px) * (AppState.active ? 1 : 0)) * (index)) : 0px;
+
+    animate x, y { 
+        duration: 250ms;
+        easing: ease-out; 
+    }
+
+    Image {
+        opacity: index == 0 ? 1 : AppState.active ? 1 : 0;
+        source: icon;
+        image-fit: contain;
+        x: parent.width * 0.18;  y: parent.height * 0.05;
+        width: parent.width * 0.79;  height: parent.height * 0.63;
+    }
+
+    // .item: the black card, as 4 strips leaving the window as a real gap
+    Rectangle { x: 0;                 y: 0; width: parent.width * 0.18; height: parent.height; background: #111; }            // left
+    Rectangle { x: parent.width*0.97; y: 0; width: parent.width * 0.03; height: parent.height; background: #111; }            // right
+    Rectangle { x: parent.width*0.18; y: 0; width: parent.width * 0.79; height: parent.height * 0.05; background: #111; }     // top
+    Rectangle {                                                                                                              // bottom + label
+        x: parent.width*0.18; y: parent.height*0.68;
+        width: parent.width*0.79; height: parent.height*0.32;
+        background: #111;
+        Text {
+            text: label;
+            color: white;
+            font-weight: 800;
+            font-size: 22px;
+            width: parent.width;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+        }
+    }
+
+    // hard drop-shadow: 3px solid edges on bottom + right, offset 1px
+    Rectangle {                                   // right
+        x: parent.width;
+        y: 3px;
+        width: 3px;
+        height: parent.height;              // +3px closes the corner
+        background: #666666;
+    }
+    Rectangle {                                   // bottom
+        x: 3px;
+        y: parent.height;
+        width: parent.width;
+        height: 3px;
+        background: #666666;
+    }
+}

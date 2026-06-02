@@ -1,0 +1,144 @@
+import { Card } from "./components/card.slint";
+import { Controls } from "./components/controls.slint";
+import { AppState } from "./state.slint";
+export { AppState }
+
+import "../fonts/mgs.ttf";
+
+export component AppWindow inherits Window {
+    full-screen: true;
+    no-frame: true;
+    background: transparent;
+
+    forward-focus: controls;
+    controls := Controls {}
+
+    default-font-family: "Press Start 2P";
+
+    Rectangle {
+        width: 100%;
+        height: 100%;
+        padding: 50px; // 25
+
+        // toggle moving flag for hiding inactive cards
+        Timer {
+            interval: 250ms;
+            running: AppState.moving;
+            triggered() => {
+                AppState.moving = false;
+            }
+        }
+
+        // Settle after item cycle
+        Timer {
+            interval: 250ms;
+            running: AppState.dir != 0;
+            triggered() => {
+                AppState.settle();
+                AppState.dir = 0;
+            }
+        }
+
+        // Delay before quit
+        Timer {
+            interval: 500ms;
+            running: AppState.quitting;
+            triggered() => {
+                AppState.request-quit();
+            }
+        }
+
+        // Delay before minimise
+        Timer {
+            interval: 500ms;
+            running: AppState.minimising;
+            triggered() => {
+                AppState.request-minimise();
+            }
+        }
+
+        TouchArea {
+            scroll-event(event) => {
+                if (event.delta-y > 0px) {
+                    AppState.go-left();
+                } else if (event.delta-y < 0px) {
+                    AppState.go-right();
+                }
+                return accept;
+            }
+        }
+
+        // Vertical carousel
+        Rectangle {
+            x: 0px + parent.padding;
+            y: 0px - parent.padding;
+            width: 275px;
+            height: 100%;
+
+
+            property <length> stepY: (0px - parent.padding + (275px * 9/16));
+            // 90
+            states [
+                down when AppState.dir == 1:  { 
+                    y:  -stepY - 140px;
+                    in { 
+                        animate y { duration: 125ms; easing: linear; } 
+                    } 
+                }
+                up  when AppState.dir == -1: { 
+                    y: stepY + 40px;
+                    in  { 
+                        animate y { duration: 250ms; easing: linear; } 
+                    } 
+                }
+                rest  when AppState.dir == 0:  { y: 0px - parent.padding; }
+            ]
+
+            for item[i] in AppState.items_prev : Card {
+                label: item.label;
+                icon: item.icon;
+                index: i;
+                pos: "v";
+                p_height: parent.height;
+                hidden: i == 0 ? (AppState.dir == -1)
+                            : (!AppState.moving && !AppState.active);
+            }
+        }
+
+        // Horizontal carousel
+        Rectangle {
+            x: 0px + parent.padding;
+            y: parent.height - self.height - parent.padding;
+            height: 275px * 9/16;
+            width: 100%;
+
+            property <length> step: 275px + parent.padding;
+            // 10
+             states [
+                right when AppState.dir == 1:  {
+                    x:  -step + 60px; 
+                    in { 
+                        animate x { duration: 250ms; easing: linear; } 
+                    } 
+                }
+                left  when AppState.dir == -1: { 
+                    x: step + 40px;
+                    in  { 
+                        animate x { duration: 125ms; easing: linear; } 
+                    } 
+                }
+                rest  when AppState.dir == 0:  { x: 0px + parent.padding; }
+            ]
+
+            for item[i] in AppState.items_next : Card {
+                label: item.label;
+                icon: item.icon;
+                index: i;
+                pos: "h";
+                p_height: parent.height;
+                hidden: i == 0 ? (AppState.dir == 1)
+                            : (!AppState.moving && !AppState.active);
+            }
+        }
+    }
+}

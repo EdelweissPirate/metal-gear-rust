@@ -1,0 +1,26 @@
+import { VerticalBox, Button } from "std-widgets.slint";
+import { AppState } from "../state.slint";
+
+export component Counter inherits Rectangle {
+       Rectangle {
+        width: 275px;
+        height: 155px;
+        background: #111111;
+
+        VerticalBox {
+            width: 100%;
+            height: 100%;
+
+            Text {
+                text: "Counter: \{AppState.counter}";
+            }
+
+            Button {
+                text: "Increase value";
+                clicked => {
+                    AppState.increase-value();
+                }
+            }
+        }
+    }
+}

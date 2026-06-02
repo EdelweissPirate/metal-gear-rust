@@ -1,0 +1,101 @@
+export struct LauncherItem {
+    label: string,
+    icon: image
+}
+
+export global AppState {
+    in-out property <int> selected: 0; // selected index
+
+    in-out property <bool> active: false; // active = carousel open or not
+    in-out property <bool> moving: false; // moving = cards are moving into or out of carouself position
+    callback toggle(); // toggle opn/close animation
+    toggle => {
+        active = !active;
+        moving = true;
+        debug("active toggle pressed");
+
+        if active {play-open()}
+        if !active {play-equip()}
+    }
+
+    in property <[LauncherItem]>  items_prev;
+    in property <[LauncherItem]>  items_next;
+
+    in-out property <int> dir: 0; // direction of carousel: -1, 0, 1
+    callback settle(); // callback called by timer to update visible card data
+    
+    callback go-right();
+    go-right => {
+        if active {
+            if dir == 0 {
+                dir = 1;
+                debug("Right arrow pressed", selected);
+                play-select()
+            }
+        } else {
+            play-bad()
+        }
+    }
+    callback go-left();
+    go-left => {
+        if active {
+            if dir == 0 {
+                dir = -1;
+                debug("Left arrow pressed", selected);
+                play-select()
+            }
+        } else {
+            play-bad()
+        }
+    }
+
+    callback reset-selected();
+    reset-selected => { 
+        dir = 0;
+        selected = 0;
+        active = false;
+        moving = false;
+        settle();
+        debug("Escape pressed");
+
+        play-equip()
+    }
+
+    in-out property <bool> quitting: false;
+    callback quit();
+    callback request-quit();
+    request-quit => {
+        quitting = false;
+        quit();
+        debug("quitting");
+    }
+
+    
+    in-out property <bool> minimising: false;
+    callback minimise();
+    callback request-minimise();
+    request-minimise => {
+        active = !active;
+        moving = true;
+        
+        minimising = false;
+        minimise();
+        debug("minimising");
+    }
+
+    callback run();
+    callback request_run();
+    request_run  => {
+        active = false;
+        run();
+        debug("program run");
+    }
+
+    
+    callback play-open();
+    callback play-select();
+    callback play-equip();
+    callback play-end();
+    callback play-start();
+    callback play-bad();
+}

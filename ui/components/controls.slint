@@ -1,0 +1,96 @@
+import { AppState } from "../state.slint";
+
+export component Controls inherits FocusScope {
+    KeyBinding {
+        keys: @keys(RightArrow);
+        activated => { 
+            AppState.go-right()
+        }
+    }
+
+    KeyBinding {
+        keys: @keys(DownArrow);
+        activated => { 
+            AppState.go-right()
+        }
+    }
+
+    KeyBinding {
+        keys: @keys(D);
+        activated => { 
+            AppState.go-right()
+        }
+    }
+
+    KeyBinding {
+        keys: @keys(S);
+        activated => { 
+            AppState.go-right()
+        }
+    }
+
+    KeyBinding {
+        keys: @keys(LeftArrow);
+        activated => { 
+            AppState.go-left()
+        }
+    }
+
+    KeyBinding {
+        keys: @keys(UpArrow);
+        activated => { 
+            AppState.go-left()
+        }
+    }
+
+    KeyBinding {
+        keys: @keys(A);
+        activated => { 
+            AppState.go-left()
+        }
+    }
+
+    KeyBinding {
+        keys: @keys(W);
+        activated => { 
+            AppState.go-left()
+        }
+    }
+
+    KeyBinding {
+        keys: @keys(Q);
+        activated => {
+            AppState.toggle()
+        }
+    }
+
+    KeyBinding {
+        keys: @keys(Return);
+        activated => {
+            AppState.request_run();
+        }
+    }
+
+    KeyBinding {
+        keys: @keys(E);
+        activated => {
+            AppState.play-end();
+            AppState.quitting = true;
+        }
+    }
+
+    KeyBinding {
+        keys: @keys(M);
+        activated => {
+            AppState.play-end();
+            AppState.minimising = true;
+        }
+    }
+
+    KeyBinding {
+        keys: @keys(Escape);
+        activated => {
+            AppState.reset-selected()
+        }
+    }
+}
