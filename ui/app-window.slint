@@ -3,7 +3,7 @@ import { Controls } from "./components/controls.slint";
 import { AppState } from "./state.slint";
 export { AppState }
 
-import "../fonts/mgs.ttf";
+import "../fonts/mgs-cus-inv.ttf";
 
 export component AppWindow inherits Window {
     full-screen: true;
@@ -13,7 +13,7 @@ export component AppWindow inherits Window {
     forward-focus: controls;
     controls := Controls {}
 
-    default-font-family: "Press Start 2P";
+    default-font-family: "mgs.Cus.Inv";
 
     Rectangle {
         width: 100%;
